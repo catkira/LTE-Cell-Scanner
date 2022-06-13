@@ -867,8 +867,15 @@ int config_bladerf(
       actual_vga2_gain = *gain;
   }
   int actual_total_vga_gain = actual_vga1_gain + actual_vga2_gain;
+  
   bladerf_gain actual_gain;
   status = bladerf_get_gain(dev, BLADERF_MODULE_RX, &actual_gain);
+  if (status != 0) {
+      printf("config_bladerf bladerf_get_gain: Failed to call bladerf_get_gain: %s\n",
+              bladerf_strerror(status));
+      if (dev!=NULL) {bladerf_close(dev); dev = NULL; return(-1);}
+  }
+  printf("gain %d dB\n", actual_gain);
   
   /*
   bladerf_lna_gain actual_lna_gain;
