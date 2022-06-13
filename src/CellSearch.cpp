@@ -845,7 +845,6 @@ int config_bladerf(
       if (dev!=NULL) {bladerf_close(dev); dev = NULL; return(-1);}
   }
 
-
   const char* gain_stages_names[9];
   status = bladerf_get_gain_stages(dev, BLADERF_MODULE_RX, gain_stages_names, 3);
   if (status < 0) {

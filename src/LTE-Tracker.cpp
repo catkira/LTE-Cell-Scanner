@@ -908,7 +908,33 @@ int config_bladerf(
               bladerf_strerror(status));
       if (dev!=NULL) {bladerf_close(dev); dev = NULL; return(-1);}
   }
+  
+  const char* gain_stages_names[9];
+  status = bladerf_get_gain_stages(dev, BLADERF_MODULE_RX, gain_stages_names, 3);
+  if (status < 0) {
+      printf("config_bladerf statubladerf_get_gain_stages: Failed to call statubladerf_get_gain_stages: %s\n",
+              bladerf_strerror(status));
+      if (dev!=NULL) {bladerf_close(dev); dev = NULL; return(-1);}
+  }
+  printf("found %d gain stages\n", status);
 
+  int actual_vga1_gain = 0;
+  int actual_vga2_gain = 0;
+  for (unsigned int i = 0; i<(unsigned int)status; i++)
+  {
+    bladerf_gain* gain = (bladerf_gain*)malloc(sizeof(bladerf_gain));
+    status = bladerf_get_gain_stage(dev, BLADERF_MODULE_RX, gain_stages_names[i], gain);
+    printf("gain for stage %s: %d dB\n", gain_stages_names[i], *gain);
+    if (i==1)
+      actual_vga1_gain = *gain;
+    else if (i==2)
+      actual_vga2_gain = *gain;
+  }
+  int actual_total_vga_gain = actual_vga1_gain + actual_vga2_gain;
+  bladerf_gain actual_gain;
+  status = bladerf_get_gain(dev, BLADERF_MODULE_RX, &actual_gain);
+
+  /*
   bladerf_lna_gain actual_lna_gain;
   status = bladerf_get_lna_gain(dev, &actual_lna_gain);
   if (status != 0) {
@@ -946,6 +972,7 @@ int config_bladerf(
   }
 
   int actual_total_vga_gain = actual_vga1_gain + actual_vga2_gain;
+  */
 
   status = bladerf_set_frequency(dev, BLADERF_MODULE_RX, (unsigned int)fc);
   if (status != 0) {
@@ -980,7 +1007,7 @@ int config_bladerf(
   hackrf_device *fake_hackrf_dev = NULL;
   capture_data(fc, 1, false, " ", false, " ", " ",fake_rtlsdr_dev,fake_hackrf_dev,dev,dev_type_t::BLADERF, capbuf, fc_programmed, fs_programmed,0);
 
-  printf("config_bladerf: set bladeRF to %fMHz %fMsps BW %fMHz %s VGA_GAIN %ddB (%d+%d).\n", (float)actual_frequency/1000000.0f, (float)actual_sample_rate/1000000.0f, (float)actual_bw/1000000.0f, lna_gain_str, actual_total_vga_gain, actual_vga1_gain, actual_vga2_gain);
+  printf("config_bladerf: set bladeRF to %fMHz %fMsps BW %fMHz VGA_GAIN %ddB (%d+%d).\n", (float)actual_frequency/1000000.0f, (float)actual_sample_rate/1000000.0f, (float)actual_bw/1000000.0f, actual_total_vga_gain, actual_vga1_gain, actual_vga2_gain);
   return(status);
 }
 #endif
