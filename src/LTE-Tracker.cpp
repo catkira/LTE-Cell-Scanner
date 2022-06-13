@@ -108,7 +108,7 @@ double global_9=0;
 
 // Simple usage screen.
 void print_usage() {
-  cout << "LTE-Tracker (" << BUILD_TYPE << ") help. 1.0 to " << MAJOR_VERSION << "." << MINOR_VERSION << "." << PATCH_LEVEL << ": An enhanced LTE Cell Scanner/tracker. Xianjun Jiao (putaoshu@msn.com)" << endl << endl;
+  cout << "LTE-Tracker (" << BUILD_TYPE << ") help. 1.0 to " << MAJOR_VERSION << "." << MINOR_VERSION << "." << PATCH_LEVEL << ": An enhanced LTE Cell Scanner/tracker. James Peroulas" << endl << endl;
   cout << "LTE-Tracker -f frequency [optional_parameters]" << endl;
   cout << "  Basic options" << endl;
   cout << "    -h --help" << endl;
@@ -901,8 +901,8 @@ int config_bladerf(
       if (dev!=NULL) {bladerf_close(dev); dev = NULL; return(-1);}
   }
 
-  int gian_set = ( gain==-9999?66:gain );
-  status = bladerf_set_gain(dev, BLADERF_MODULE_RX, gian_set);
+  int gain_set = ( gain==-9999?66:gain );
+  status = bladerf_set_gain(dev, BLADERF_MODULE_RX, gain_set);
   if (status != 0) {
       printf("config_bladerf bladerf_set_gain: Failed to set gain: %s\n",
               bladerf_strerror(status));
