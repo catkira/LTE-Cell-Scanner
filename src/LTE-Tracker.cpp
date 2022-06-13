@@ -920,6 +920,9 @@ int config_bladerf(
 
   int actual_vga1_gain = 0;
   int actual_vga2_gain = 0;
+  // for loop over all stages
+  // bladeRF1 has 3 stages (LNA(0 to 6 dB), VGA1(5 to 30 dB), VGA2(0 to 30 dB)), overall 5 to 66 dB
+  // bladeRF2 has 1 stage, overall 0 to 77 dB  
   for (unsigned int i = 0; i<(unsigned int)status; i++)
   {
     bladerf_gain* gain = (bladerf_gain*)malloc(sizeof(bladerf_gain));
