@@ -14,8 +14,11 @@ clear all; close all;
 % filename = '../test/f1890_s15.36_bw10_l32_g40_1s.bin'; % TDD 20MHz
 % filename = '../test/f1890_s15.36_bw10_l32_g22_1s.bin'; % TDD 20MHz
 
-filename = '../test/f1860_s15.36_bw10_l32_g36_1s.bin'; % FDD 20MHz
+%filename = '../test/f1860_s15.36_bw10_l32_g36_1s.bin'; % FDD 20MHz
 % filename = '../test/f1890_s15.36_bw10_l32_g36_1s.bin'; % TDD 20MHz
+% filename = '../test/f1890_s15.36_bw10_l32_g36_1s.bin'; % TDD 20MHz
+
+filename = 'D:/f1860_s1.92_g0_1s.bin';
 
 sampling_rate = 15.36e6;
 coef = fir1(158, ((9e6+400e3))/sampling_rate); %freqz(coef, 1, 1024); %10M channel filter. 

@@ -16,6 +16,9 @@ elseif strcmpi(dev, 'rtlsdr')
 elseif strcmp(dev, 'bladerf') || strcmp(dev, 'usrp')
     [s, count] = fread(fid, num_sample_read*2, 'int16');
     s = (s(1:2:end) + 1i.*s(2:2:end))./(2^16);
+elseif strcmp(dev, 'gnuradio')
+    [s, count] = fread(fid, num_sample_read*2, 'float');
+    s = s(1:2:end) + 1i.*s(2:2:end);
 end
 
 fclose(fid);

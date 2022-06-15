@@ -13,9 +13,9 @@
 function cell_info = test_CellSearch(test_sp, test_ep)
 test_source_info = regression_test_source('../regression_test_signal_file');
 
-% test_sp = 1;
-% test_ep = length(test_source_info);
-% test_sp = 10; test_ep = 10;
+ test_sp = 2;
+ test_ep = length(test_source_info);
+ %test_sp = 10; test_ep = 10;
 sampling_carrier_twist = 0;
 % f_search_set = -140e3:5e3:140e3;
 f_search_set = -140e3:5e3:140e3; % align to C
