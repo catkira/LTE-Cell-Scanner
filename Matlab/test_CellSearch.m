@@ -13,8 +13,8 @@
 function cell_info = test_CellSearch(test_sp, test_ep)
 test_source_info = regression_test_source('../regression_test_signal_file');
 
-test_sp = 5;
-test_ep = 5;
+test_sp = 4;
+test_ep = 4;
 %test_ep = length(test_source_info);
 %test_sp = 10; test_ep = 10;
 

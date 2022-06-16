@@ -68,16 +68,14 @@ for try_idx = 1 : num_try
     Z_th1=ex_gain.*R_th1*sp_incoherent/rx_cutoff/137/2/n_comb_xc/(2*DS_COMB_ARM+1);
 
     figure(1);
-    subplot(3,1,1); plot(xc_incoherent_collapsed_pow(1,:)); drawnow;
-    subplot(3,1,2); plot(xc_incoherent_collapsed_pow(2,:)); drawnow;
-    subplot(3,1,3); plot(xc_incoherent_collapsed_pow(3,:)); drawnow;
+    subplot(3,1,1); hold off; plot(xc_incoherent_collapsed_pow(1,:)); title('n_id_2=0') ;drawnow;
+    subplot(3,1,2); hold off; plot(xc_incoherent_collapsed_pow(2,:)); title('n_id_2=1'); drawnow;
+    subplot(3,1,3); hold off; plot(xc_incoherent_collapsed_pow(3,:)); title('n_id_2=2'); drawnow;
     peaks=peak_search(xc_incoherent_collapsed_pow,xc_incoherent_collapsed_frq,Z_th1,dynamic_f_search_set,fc);
 
     for j = 1 : length(peaks)
         peaks(j).extra_info.num_peaks_raw = length(peaks)/2;
-        subplot(3,1,1); hold on; plot(peaks(j).ind, xc_incoherent_collapsed_pow(1,peaks(j).ind),'r*'); hold off; drawnow;
-        %subplot(3,1,2); hold on; plot(peaks(j).ind, xc_incoherent_collapsed_pow(2,peaks(j).ind),'r*'); hold off; drawnow;
-        %subplot(3,1,3); hold on; plot(peaks(j).ind, xc_incoherent_collapsed_pow(3,peaks(j).ind),'r*'); hold off; drawnow;
+        subplot(3,1,peaks(j).n_id_2+1); hold on; plot(peaks(j).ind, xc_incoherent_collapsed_pow(peaks(j).n_id_2+1,peaks(j).ind),'r*'); drawnow;
     end
     disp(['Found ' num2str(length(peaks)/2) ' peaks']);
     tdd_flags = kron(ones(1, length(peaks)/2), [0 1]); % even: tdd_flag 0; odd : tdd_flag 1
@@ -98,6 +96,7 @@ for try_idx = 1 : num_try
             if isnan( peak.n_rb_dl)
                 continue;
             end
+            subplot(3,1,peaks(j).n_id_2+1); hold on; plot(peak.ind, xc_incoherent_collapsed_pow(peaks(j).n_id_2+1,peak.ind),'g*'); drawnow;            
             if tdd_flag == 1
                 disp('  Detected a TDD cell!');
             else
