@@ -26,7 +26,7 @@ error(chk_param(f_search_set,'f_search_set','vector','real'));
 error(chk_param(ds_comb_arm,'ds_comb_arm','scalar','real','integer','>=',0));
 error(chk_param(fc,'fc','scalar','real','>',0));
 
-% % Create the time domain pss signals
+% Create the time domain pss signals
 % persistent pss_td
 % persistent pss_td_populated
 % if (isempty(pss_td_populated))

@@ -8,7 +8,7 @@
 % https://github.com/Evrytania/Matlab-Library
 % https://github.com/JiaoXianjun/multi-rtl-sdr-calibration
 
-function [cell_info, r_pbch_sub, r_20M_sub, cell_info_return] = CellSearch(r_pbch, r_20M, f_search_set, fc, pss_peak_max_reserve, num_pss_period_try, combined_pss_peak_range, par_th, num_peak_th)
+function [cell_info, r_pbch_sub, r_20M_sub, cell_info_return] = CellSearch(r_pbch, r_20M, f_search_set, fc)
 r_20M_sub = -1;
 skip_TDD = 1;
 
@@ -36,6 +36,7 @@ thresh1_n_nines=12;
 rx_cutoff=(6*12*15e3/2+4*15e3)/(FS_LTE/16/2);
 THRESH2_N_SIGMA = 3;
 ex_gain = 2;
+fs = 30.72e6;
 
 num_try = floor(length(r_pbch)/num_sample_pbch);
 tdd_fdd_str = {'TDD', 'FDD'};
@@ -46,21 +47,24 @@ for try_idx = 1 : num_try
     ep = sp + num_sample_pbch - 1;
     capbuf_pbch = r_pbch(sp:ep).';
     
-    sp_20M = (sp-1)*pbch_sampling_ratio + 1;
-    ep_20M = ep*pbch_sampling_ratio;
     capbuf_pbch = capbuf_pbch - mean(capbuf_pbch);
     r_pbch_sub = capbuf_pbch;
-    
-    if ~isempty(r_20M)
-        r_20M_sub = r_20M(sp_20M:ep_20M);
-    end
 
     disp(['Input averaged abs: ' num2str( mean(abs([real(capbuf_pbch) imag(capbuf_pbch)])) )]);
 
     disp('sampling_ppm_f_search_set_by_pss: try ... ... ');
-    [dynamic_f_search_set, xc, ~] = sampling_ppm_f_search_set_by_pss(capbuf_pbch.', f_search_set, td_pss, pss_fo_set, pss_peak_max_reserve, num_pss_period_try, combined_pss_peak_range, par_th, num_peak_th);
-     %figure(2); show_time_frequency_grid_according_pss(extra_info.pss_loc, extra_info.k_factor, r_20M_sub(1 : 21e-3*30.72e6));
+    [dynamic_f_search_set, xc, ~] = sampling_ppm_f_search_set_by_pss(capbuf_pbch.', f_search_set, td_pss, pss_fo_set);
+    
+    %% Display grid 
+    sp_20M = (sp-1)*pbch_sampling_ratio + 1;
+    ep_20M = ep*pbch_sampling_ratio;
+    if ep_20M > size(r_20M,1); ep_20M = size(r_20M,1); end
+    r_20M_sub = r_20M(sp_20M:ep_20M);
+    %time_displayed = 21e-3; % 21ms
+    time_displayed = size(r_20M_sub,1)/fs; % show everything
+    figure(2); show_time_frequency_grid_according_pss(1, 1, r_20M_sub(1 : time_displayed*fs)); % plot 21ms
 
+    %%
     [xc_incoherent_collapsed_pow, xc_incoherent_collapsed_frq, n_comb_xc, ~, ~, ~, sp_incoherent, ~]= ...
     xcorr_pss(capbuf_pbch,dynamic_f_search_set,DS_COMB_ARM,fc,xc);
 
@@ -81,6 +85,7 @@ for try_idx = 1 : num_try
     tdd_flags = kron(ones(1, length(peaks)/2), [0 1]); % even: tdd_flag 0; odd : tdd_flag 1
     
     detect_flag = zeros(1, length(peaks));
+    figure(1);
     for i=1:length(peaks)
         disp(['try peak ' num2str(floor((i+1)/2)) ' in ' tdd_fdd_str{mod(i,2)+1} ' mode']);
         tdd_flag = tdd_flags(i);

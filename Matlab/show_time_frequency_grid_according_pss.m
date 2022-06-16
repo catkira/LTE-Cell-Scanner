@@ -1,6 +1,7 @@
 function show_time_frequency_grid_according_pss(pss_loc, k_factor, s)
 clf;
 
+fs = 30.72e6;
 s = s(:).';
 
 peak_loc = find(pss_loc ~= -inf, 1, 'first');
@@ -9,12 +10,20 @@ peak_loc = pss_loc(peak_loc);
 tdd_flag_set = [0 1 0 1];
 cp_type_flag_set = [0 0 1 1];
 
-for i = 1 : 2
+show_FDD_only = 1;
+if show_FDD_only == 1
+    num_loops = 1;
+else
+    num_loops = 2;
+end
+for i = 1 : num_loops
     tdd_flag = tdd_flag_set(i);
     cp_type_flag = cp_type_flag_set(i);
     slot_start = get_slot_start(tdd_flag, cp_type_flag, peak_loc, k_factor);
     [tf_grid, ~] = get_time_frequency_grid(cp_type_flag, slot_start, k_factor, s);
-    subplot(2,1,i); pcolor(tf_grid); shading flat; drawnow;
+    [X,Y] = meshgrid(1:size(tf_grid,1),1:size(tf_grid,2));
+    X = (X-size(X,2)/2)*fs/size(X,2)*1e-6;
+    subplot(num_loops,1,i); pcolor(X,Y,tf_grid'); shading flat; xlabel('frequency around f_c (MHz)'); ylabel('time (symbols)'); drawnow;
 end
 
 function slot_start = get_slot_start(tdd_flag, cp_type_flag, peak_loc, k_factor)
@@ -51,7 +60,8 @@ end
 len_cp = len_symbol - len_symbol_core;
 
 num_symbol_rough = ceil(total_len/len_symbol);
-tf_grid = zeros(1200, num_symbol_rough);
+num_displayed_bins = 2048;
+tf_grid = zeros(num_displayed_bins, num_symbol_rough);
 sp_set = zeros(1, num_symbol_rough);
 
 symbol_count = 0;
@@ -78,7 +88,8 @@ while symbol_start_tmp+len_symbol-1 <= total_len
 
     sym = s(sp:ep);
     fft_sym = fft(sym);
-    spec = abs([fft_sym(end-600+1 : end)  fft_sym(1:600)]).';
+    %spec = abs([fft_sym(end-num_displayed_bins/2+1 : end)  fft_sym(1:num_displayed_bins/2)]).';
+    spec = abs(fftshift(fft_sym)).';
     
     tf_grid(:, symbol_count+1) = spec;
     sp_set(symbol_count+1) = sp;

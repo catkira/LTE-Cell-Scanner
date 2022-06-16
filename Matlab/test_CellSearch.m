@@ -13,20 +13,14 @@
 function cell_info = test_CellSearch(test_sp, test_ep)
 test_source_info = regression_test_source('../regression_test_signal_file');
 
-test_sp = 4;
-test_ep = 4;
+test_sp = 2;
+test_ep = 2;
 %test_ep = length(test_source_info);
 %test_sp = 10; test_ep = 10;
 
 f_search_set = -140e3:5e3:140e3;
-pss_peak_max_reserve = 2;
-num_pss_period_try = 1;
-% combined_pss_peak_range = 160;
-combined_pss_peak_range = -1; % set it to -1 to use complementary range of peak.
-par_th = 8.5;
-num_peak_th = 1/2; % originally is 2/3;
 
-filename = ['CellSearch_test' num2str(test_sp) 'to' num2str(test_ep) '_fo' num2str(min(f_search_set)/1e3) 'to' num2str(max(f_search_set)/1e3) '_resv' num2str(pss_peak_max_reserve) '_numPtry' num2str(num_pss_period_try) '_Prange' num2str(combined_pss_peak_range) '_parTh' num2str(par_th) '_numPth' num2str(num_peak_th) '.mat'];
+filename = ['CellSearch_test' num2str(test_sp) 'to' num2str(test_ep) '_fo' num2str(min(f_search_set)/1e3) 'to' num2str(max(f_search_set)/1e3) '.mat'];
 
 cell_info = cell(1, length(test_source_info));
 for i = test_sp : test_ep
@@ -37,7 +31,7 @@ for i = test_sp : test_ep
     r_raw = r_raw - mean(r_raw); % remove DC
 
     r_pbch = filter_wo_tail(r_raw, coef_pbch, (30.72e6/16)/test_source_info(i).fs);
-    [~, ~, ~, cell_info{i}] = CellSearch(r_pbch, [], f_search_set, test_source_info(i).fc, pss_peak_max_reserve, num_pss_period_try, combined_pss_peak_range, par_th, num_peak_th);
-    save(filename, 'test_source_info', 'cell_info', 'test_sp', 'test_ep', 'f_search_set', 'pss_peak_max_reserve', 'num_pss_period_try', 'combined_pss_peak_range');
+    [~, ~, ~, cell_info{i}] = CellSearch(r_pbch, r_raw, f_search_set, test_source_info(i).fc);
+    save(filename, 'test_source_info', 'cell_info', 'test_sp', 'test_ep', 'f_search_set');
 end
 
