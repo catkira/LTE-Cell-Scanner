@@ -2,9 +2,8 @@
 % Find out LTE PSS in the signal stream and correct sampling&carrier error.
 % A script of project: https://github.com/JiaoXianjun/rtl-sdr-LTE
 
-function [ppm, f_set, xc, fo_idx_set, pss_idx_set, fo_pss_idx_set, fo_with_all_pss_idx] = sampling_ppm_f_search_set_by_pss(s, fo_search_set, td_pss, pss_fo_set, max_reserve, num_pss_period_try, combined_pss_peak_range, par_th, num_peak_th)
+function [f_set, xc, fo_idx_set] = sampling_ppm_f_search_set_by_pss(s, fo_search_set, td_pss, pss_fo_set, max_reserve, num_pss_period_try, combined_pss_peak_range, par_th, num_peak_th)
 len_pss = size(pss_fo_set, 1);
-num_fo_pss = size(pss_fo_set, 2);
 
 len = length(s);
 len_short = len - (len_pss-1);
@@ -25,7 +24,6 @@ tic;
 cost_time2 = toc;
 disp(['PSS xcorr cost ' num2str(cost_time2)]);
 
-ppm = inf;
 f_set = fo_search_set;
 
 fo_idx_set = 1:length(f_set);
@@ -38,7 +36,4 @@ for foi=1:n_f
   end
 end
 
-pss_idx_set = inf;
-fo_pss_idx_set = inf;
-fo_with_all_pss_idx = inf;
 disp('Corr done.');
