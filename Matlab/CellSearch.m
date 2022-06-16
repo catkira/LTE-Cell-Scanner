@@ -86,7 +86,7 @@ for try_idx = 1 : num_try
     detect_flag = zeros(1, length(peaks));
     figure(1);
     for i=1:length(peaks)
-        disp(['try peak ' num2str(floor((i+1)/2)) ' in ' tdd_fdd_str{mod(i,2)+1} ' mode']);
+        disp(['try peak ' num2str(floor((i+1)/2)) ' at offset ' num2str(peaks(i).ind/((30.72e6/16)/fs)) ' in ' tdd_fdd_str{mod(i,2)+1} ' mode']);
         tdd_flag = tdd_flags(i);
         peak = sss_detect(peaks(i),capbuf_pbch,THRESH2_N_SIGMA,fc,tdd_flag);
         if ~isnan( peak.n_id_1 )
@@ -145,6 +145,7 @@ else
                 cell_mode_str = 'FDD';
             end
             disp(['Cell ' num2str(i) ' information:--------------------------------------------------------']);
+            disp(['               Offset: ' num2str(peak.ind/((30.72e6/16)/fs))]);
             disp(['            Cell mode: ' num2str(cell_mode_str)]);
             disp(['              Cell ID: ' num2str(peak.n_id_cell)]);
             disp(['   Num. eNB Ant ports: ' num2str(peak.n_ports)]);
