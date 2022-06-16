@@ -31,7 +31,7 @@ for i = test_sp : test_ep
     r_raw = r_raw - mean(r_raw); % remove DC
 
     r_pbch = filter_wo_tail(r_raw, coef_pbch, (30.72e6/16)/test_source_info(i).fs);
-    [~, ~, ~, cell_info{i}] = CellSearch(r_pbch, r_raw, f_search_set, test_source_info(i).fc);
+    [~, ~, ~, cell_info{i}] = CellSearch(r_pbch, r_raw, f_search_set, test_source_info(i).fc, test_source_info(i).fs);
     save(filename, 'test_source_info', 'cell_info', 'test_sp', 'test_ep', 'f_search_set');
 end
 

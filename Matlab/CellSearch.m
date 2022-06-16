@@ -8,7 +8,7 @@
 % https://github.com/Evrytania/Matlab-Library
 % https://github.com/JiaoXianjun/multi-rtl-sdr-calibration
 
-function [cell_info, r_pbch_sub, r_20M_sub, cell_info_return] = CellSearch(r_pbch, r_20M, f_search_set, fc)
+function [cell_info, r_pbch_sub, r_20M_sub, cell_info_return] = CellSearch(r_pbch, r_20M, f_search_set, fc, fs)
 r_20M_sub = -1;
 skip_TDD = 1;
 
@@ -36,7 +36,6 @@ thresh1_n_nines=12;
 rx_cutoff=(6*12*15e3/2+4*15e3)/(FS_LTE/16/2);
 THRESH2_N_SIGMA = 3;
 ex_gain = 2;
-fs = 30.72e6;
 
 num_try = floor(length(r_pbch)/num_sample_pbch);
 tdd_fdd_str = {'TDD', 'FDD'};
@@ -62,7 +61,7 @@ for try_idx = 1 : num_try
     r_20M_sub = r_20M(sp_20M:ep_20M);
     %time_displayed = 21e-3; % 21ms
     time_displayed = size(r_20M_sub,1)/fs; % show everything
-    figure(2); show_time_frequency_grid_according_pss(1, 1, r_20M_sub(1 : time_displayed*fs)); % plot 21ms
+    figure(2); show_time_frequency_grid_according_pss(1, 1, r_20M_sub(1 : time_displayed*fs),fs); % plot 21ms
 
     %%
     [xc_incoherent_collapsed_pow, xc_incoherent_collapsed_frq, n_comb_xc, ~, ~, ~, sp_incoherent, ~]= ...

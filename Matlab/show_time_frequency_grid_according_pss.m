@@ -1,7 +1,6 @@
-function show_time_frequency_grid_according_pss(pss_loc, k_factor, s)
+function show_time_frequency_grid_according_pss(pss_loc, k_factor, s, fs)
 clf;
 
-fs = 30.72e6;
 s = s(:).';
 
 peak_loc = find(pss_loc ~= -inf, 1, 'first');
