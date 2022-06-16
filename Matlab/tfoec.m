@@ -1,4 +1,4 @@
-function [tfg_comp, tfg_comp_timestamp, peak_out]=tfoec(peak,tfg,tfg_timestamp,fc,sampling_carrier_twist, nRB)
+function [tfg_comp, tfg_comp_timestamp, peak_out]=tfoec(peak,tfg,tfg_timestamp,fc, nRB)
 
 % add 100RB support. Xianjun Jiao (putaohsu@gmail.com)
 % Compensates for frequency offset, time offset, and also rotates the
@@ -42,11 +42,7 @@ nSC = nRB*12;
 nRS = nRB*2;
 
 % fc*k_factor is the receiver's actual RX center frequency.
-if sampling_carrier_twist==1
-    k_factor=(fc-peak.freq_fine)/fc;
-else
-    k_factor = peak.k_factor;
-end
+k_factor=(fc-peak.freq_fine)/fc;
 
 % Second order derivations
 n_ofdm=size(tfg,1);
@@ -129,17 +125,11 @@ end
 
 residual_f=angle(foe)/(2*pi)/(k_factor*.0005);
 peak_out.freq_superfine=peak_out.freq_fine+residual_f;
-if sampling_carrier_twist
-    peak_out.k_factor=(fc-peak_out.freq_superfine)/fc;
-end
+peak_out.k_factor=(fc-peak_out.freq_superfine)/fc;
 
 % Perform FOC. This does not compensate for the ICI, only the bulk
 % frequency offset and time shift between OFDM symbols.
-if sampling_carrier_twist==1
-    k_factor_residual=(fc-residual_f)/fc;
-else
-    k_factor_residual=1;
-end
+k_factor_residual=(fc-residual_f)/fc;
 
 tfg_comp=NaN(size(tfg));
 tfg_comp_timestamp=1+k_factor_residual*(tfg_timestamp-1);

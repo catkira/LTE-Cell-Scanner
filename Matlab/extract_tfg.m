@@ -1,4 +1,4 @@
-function [tfg, tfg_timestamp, peak_out]=extract_tfg(peak,capbuf,fc,sampling_carrier_twist, nRB)
+function [tfg, tfg_timestamp, peak_out]=extract_tfg(peak,capbuf,fc, nRB)
 
 % Xianjun Jiao (putaoshu@msn.com)
 % add 100RB support.
@@ -50,11 +50,7 @@ len_cp_normal2 = 160/decimation_ratio;
 nSC = nRB*12;
 
 % fc*k_factor is the receiver's actual RX center frequency.
-if sampling_carrier_twist==1
-    k_factor=(fc-freq_fine)/fc;
-else
-    k_factor = peak.k_factor;
-end
+k_factor=(fc-freq_fine)/fc;
 
 if (strcmpi(cp_type,'normal'))
   n_symb_dl=7;

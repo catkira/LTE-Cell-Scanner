@@ -1,4 +1,4 @@
-function peak_out = sss_detect(peak,capbuf,thresh2_n_sigma,fc,sampling_carrier_twist,tdd_flag, varargin)
+function peak_out = sss_detect(peak,capbuf,thresh2_n_sigma,fc,tdd_flag, varargin)
 
 % Perform maximum likelihood estimation of the SSS.
 
@@ -24,13 +24,7 @@ peak_freq=peak.freq;
 n_id_2_est=peak.n_id_2;
 
 % % fc*k_factor is the receiver's actual RX center frequency.
-if sampling_carrier_twist==1
-    k_factor=(fc-peak.freq)/fc;
-% else
-%     k_factor=1;
-else
-    k_factor = peak.k_factor;
-end
+k_factor=(fc-peak.freq)/fc;
 
 if tdd_flag == 1
     min_idx = 3*(128+32)+32;

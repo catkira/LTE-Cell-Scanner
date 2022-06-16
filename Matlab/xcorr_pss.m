@@ -1,5 +1,5 @@
 function [xc_incoherent_collapsed_pow xc_incoherent_collapsed_frq n_comb_xc n_comb_sp xc_incoherent_single xc_incoherent sp_incoherent sp] = ...
-    xcorr_pss(capbuf,f_search_set,ds_comb_arm,fc,sampling_carrier_twist,k_factor,xc)
+    xcorr_pss(capbuf,f_search_set,ds_comb_arm,fc,k_factor,xc)
 
 % Copyright 2012 Evrytania LLC (http://www.evrytania.com)
 %
@@ -20,7 +20,7 @@ function [xc_incoherent_collapsed_pow xc_incoherent_collapsed_frq n_comb_xc n_co
 
 % Perform the main correlations necessary to detect the PSS
 
-error(nargchk(7,7,nargin));
+error(nargchk(6,6,nargin));
 error(chk_param(capbuf,'capbuf','vector','horizontal'));
 error(chk_param(f_search_set,'f_search_set','vector','real'));
 error(chk_param(ds_comb_arm,'ds_comb_arm','scalar','real','integer','>=',0));
@@ -74,13 +74,9 @@ xc_incoherent_single=NaN(3,9600,n_f);
 n_comb_xc=floor((size(xc,2)-100)/9600);
 for foi=1:n_f
   
-  if sampling_carrier_twist == 1
-      f_off=f_search_set(foi);
-      % fc*k_factor is the receiver's actual RX center frequency.
-      k_factor=(fc-f_off)/fc;
-%   else
-%       k_factor = 1; % because it is already corrected outside
-  end
+  f_off=f_search_set(foi);
+  % fc*k_factor is the receiver's actual RX center frequency.
+  k_factor=(fc-f_off)/fc;
   
   for t=1:3
     %xc_incoherent_single(t,:,foi)=sum(transpose(reshape(absx2(xc(t,1:n_comb_xc*9600,foi)),9600,n_comb_xc)),1)/n_comb_xc;
