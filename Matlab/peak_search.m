@@ -1,4 +1,4 @@
-function peaks=peak_search(xc_incoherent_collapsed_pow,xc_incoherent_collapsed_frq,Z_th1,f_search_set,fc,k_factor)
+function peaks=peak_search(xc_incoherent_collapsed_pow,xc_incoherent_collapsed_frq,Z_th1,f_search_set,fc)
 
 % Copyright 2012 Evrytania LLC (http://www.evrytania.com)
 %
