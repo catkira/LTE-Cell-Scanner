@@ -10,6 +10,7 @@
 
 function [cell_info, r_pbch_sub, r_20M_sub, cell_info_return] = CellSearch(r_pbch, r_20M, f_search_set, fc, pss_peak_max_reserve, num_pss_period_try, combined_pss_peak_range, par_th, num_peak_th)
 r_20M_sub = -1;
+skip_TDD = 1;
 
 [~, td_pss] = pss_gen;
 
@@ -58,7 +59,7 @@ for try_idx = 1 : num_try
 
     disp('sampling_ppm_f_search_set_by_pss: try ... ... ');
     [dynamic_f_search_set, xc, ~] = sampling_ppm_f_search_set_by_pss(capbuf_pbch.', f_search_set, td_pss, pss_fo_set, pss_peak_max_reserve, num_pss_period_try, combined_pss_peak_range, par_th, num_peak_th);
-%     figure(2); show_time_frequency_grid_according_pss(extra_info.pss_loc, extra_info.k_factor, r_20M_sub(1 : 21e-3*30.72e6));
+     %figure(2); show_time_frequency_grid_according_pss(extra_info.pss_loc, extra_info.k_factor, r_20M_sub(1 : 21e-3*30.72e6));
 
     [xc_incoherent_collapsed_pow, xc_incoherent_collapsed_frq, n_comb_xc, ~, ~, ~, sp_incoherent, ~]= ...
     xcorr_pss(capbuf_pbch,dynamic_f_search_set,DS_COMB_ARM,fc,xc);
@@ -66,21 +67,30 @@ for try_idx = 1 : num_try
     R_th1=chi2inv(1-(10.0^(-thresh1_n_nines)), 2*n_comb_xc*(2*DS_COMB_ARM+1));
     Z_th1=ex_gain.*R_th1*sp_incoherent/rx_cutoff/137/2/n_comb_xc/(2*DS_COMB_ARM+1);
 
+    figure(1);
+    subplot(3,1,1); plot(xc_incoherent_collapsed_pow(1,:)); drawnow;
+    subplot(3,1,2); plot(xc_incoherent_collapsed_pow(2,:)); drawnow;
+    subplot(3,1,3); plot(xc_incoherent_collapsed_pow(3,:)); drawnow;
     peaks=peak_search(xc_incoherent_collapsed_pow,xc_incoherent_collapsed_frq,Z_th1,dynamic_f_search_set,fc);
 
-    
     for j = 1 : length(peaks)
         peaks(j).extra_info.num_peaks_raw = length(peaks)/2;
+        subplot(3,1,1); hold on; plot(peaks(j).ind, xc_incoherent_collapsed_pow(1,peaks(j).ind),'r*'); hold off; drawnow;
+        %subplot(3,1,2); hold on; plot(peaks(j).ind, xc_incoherent_collapsed_pow(2,peaks(j).ind),'r*'); hold off; drawnow;
+        %subplot(3,1,3); hold on; plot(peaks(j).ind, xc_incoherent_collapsed_pow(3,peaks(j).ind),'r*'); hold off; drawnow;
     end
-    disp(['Hit  num peaks ' num2str(length(peaks)/2) ]);
+    disp(['Found ' num2str(length(peaks)/2) ' peaks']);
     tdd_flags = kron(ones(1, length(peaks)/2), [0 1]); % even: tdd_flag 0; odd : tdd_flag 1
     
     detect_flag = zeros(1, length(peaks));
     for i=1:length(peaks)
-        disp(['try peak ' num2str(floor((i+1)/2)) ' ' tdd_fdd_str{mod(i,2)+1} ' mode']);
+        disp(['try peak ' num2str(floor((i+1)/2)) ' in ' tdd_fdd_str{mod(i,2)+1} ' mode']);
         tdd_flag = tdd_flags(i);
         peak = sss_detect(peaks(i),capbuf_pbch,THRESH2_N_SIGMA,fc,tdd_flag);
         if ~isnan( peak.n_id_1 )
+            if skip_TDD == 1 && tdd_flag == 1
+                continue;
+            end
             peak=pss_sss_foe(peak,capbuf_pbch,fc,tdd_flag);
             [tfg, tfg_timestamp]=extract_tfg(peak,capbuf_pbch,fc, 6);
             [tfg_comp, ~, peak]=tfoec(peak,tfg,tfg_timestamp,fc, 6);
