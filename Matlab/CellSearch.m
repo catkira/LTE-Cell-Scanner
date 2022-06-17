@@ -8,14 +8,12 @@
 % https://github.com/Evrytania/Matlab-Library
 % https://github.com/JiaoXianjun/multi-rtl-sdr-calibration
 
-function [cell_info, r_pbch_sub, r_full_sub, cell_info_return] = CellSearch(r_pbch, r_full, f_search_set, fc, fs)
+function [r_pbch_sub, r_full_sub, cell_info_return] = CellSearch(r_pbch, r_full, f_search_set, fc, fs)
 r_full_sub = -1;
 skip_TDD = 1;
 
-[~, td_pss] = pss_gen; % generate td zadoff chu sequences
-
 % f_search_set = 20e3:5e3:30e3; % change it wider if you don't know pre-information
-pss_fo_set = pss_fo_set_gen(td_pss, f_search_set);
+%pss_fo_set = pss_fo_set_gen(td_pss, f_search_set);
 
 num_radioframe = 8; % each radio frame length 10ms. MIB period is 4 radio frame
 
@@ -28,7 +26,7 @@ len_time_subframe = 1e-3; % 1ms. LTE spec
 num_sample_per_radioframe = num_subframe_per_radioframe*len_time_subframe*sampling_rate_pbch;
 num_sample_pbch = num_radioframe*num_sample_per_radioframe;
 
-DS_COMB_ARM = 2;
+DS_COMB_ARM = 0; % disable combining for now
 FS_LTE = 30720000;
 thresh1_n_nines=12;
 rx_cutoff=(6*12*15e3/2+4*15e3)/(FS_LTE/16/2);
@@ -36,7 +34,6 @@ THRESH2_N_SIGMA = 3;
 ex_gain = 2;
 
 num_try = floor(length(r_pbch)/num_sample_pbch);
-tdd_fdd_str = {'TDD', 'FDD'};
 %% Display overview grid
 figure(3); show_time_frequency_grid_according_pss(400, 1, r_full, fs);
 title("overview")
@@ -54,7 +51,7 @@ for try_idx = 1 : num_try
     disp(['Input averaged abs: ' num2str( mean(abs([real(capbuf_pbch) imag(capbuf_pbch)])) )]);
 
     disp('sampling_ppm_f_search_set_by_pss: try ... ... ');
-    [dynamic_f_search_set, xc, ~] = sampling_ppm_f_search_set_by_pss(capbuf_pbch.', f_search_set, td_pss, pss_fo_set);
+    xc = sampling_ppm_f_search_set_by_pss(capbuf_pbch.', f_search_set);
     
     %% Display grid 
     sp_full = (sp-1)*fs/sampling_rate_pbch + 1;
@@ -66,9 +63,9 @@ for try_idx = 1 : num_try
     figure(2); show_time_frequency_grid_according_pss(0, 1, r_full_sub(1 : time_displayed*fs), fs); % plot 21ms
     title("current segment")
 
-    %%
+    %% xcor_pss only returns first 9600 positions, which is about 5 ms (half a frame)
     [xc_incoherent_collapsed_pow, xc_incoherent_collapsed_frq, n_comb_xc, ~, ~, ~, sp_incoherent, ~]= ...
-    xcorr_pss(capbuf_pbch,dynamic_f_search_set,DS_COMB_ARM,fc,xc);
+    xcorr_pss(capbuf_pbch,f_search_set,DS_COMB_ARM,fc,xc);
 
     R_th1=chi2inv(1-(10.0^(-thresh1_n_nines)), 2*n_comb_xc*(2*DS_COMB_ARM+1));
     Z_th1=ex_gain.*R_th1*sp_incoherent/rx_cutoff/137/2/n_comb_xc/(2*DS_COMB_ARM+1);
@@ -77,7 +74,7 @@ for try_idx = 1 : num_try
     subplot(3,1,1); hold off; plot(xc_incoherent_collapsed_pow(1,:)); title('n_id_2=0', 'Interpreter', 'none'); drawnow;
     subplot(3,1,2); hold off; plot(xc_incoherent_collapsed_pow(2,:)); title('n_id_2=1', 'Interpreter', 'none'); drawnow;
     subplot(3,1,3); hold off; plot(xc_incoherent_collapsed_pow(3,:)); title('n_id_2=2', 'Interpreter', 'none'); drawnow;
-    peaks=peak_search(xc_incoherent_collapsed_pow,xc_incoherent_collapsed_frq,Z_th1,dynamic_f_search_set,fc);
+    peaks=peak_search(xc_incoherent_collapsed_pow,xc_incoherent_collapsed_frq,Z_th1,f_search_set,fc);
 
     for j = 1 : length(peaks)
         peaks(j).extra_info.num_peaks_raw = length(peaks)/2;
@@ -99,7 +96,7 @@ for try_idx = 1 : num_try
     detect_flag = zeros(1, length(peaks));
     figure(1);
     for i=1:length(peaks)
-        disp(['try peak ' num2str(floor((i+1)/2)) ' at offset ' num2str(peaks(i).ind/((30.72e6/16)/fs)) ' in ' tdd_fdd_str{mod(i,2)+1} ' mode']);
+        disp(['try peak ' num2str(floor((i+1)/2)) ' at offset ' num2str(peaks(i).ind/((30.72e6/16)/fs))]);
         tdd_flag = tdd_flags(i);
         peak = sss_detect(peaks(i),capbuf_pbch,THRESH2_N_SIGMA,fc);
         if ~isnan( peak.n_id_1 )
@@ -137,8 +134,6 @@ end
 
 cell_info_return = peaks;
 
-cell_info = [];
-
 % show all Cells information
 disp(' ');
 disp('-------------------------------Cells information summary-------------------------------');
@@ -150,8 +145,6 @@ else
         hit_idx = find(detect_flag);
         for i=1:length(hit_idx);
             peak = peaks(hit_idx(i));
-            
-            cell_info = [cell_info peak];
             
             if peak.duplex_mode == 1
                 cell_mode_str = 'TDD';

@@ -69,7 +69,7 @@ sp=sp/(137*2);
 assert(any(isnan(sp))==0);
 
 % Perform incoherent combining
-xc_incoherent=NaN(3,9600,n_f);
+xc_incoherent=NaN(3,9600,n_f); % first 9600 positions, which is about 5 ms (half a frame)
 xc_incoherent_single=NaN(3,9600,n_f);
 n_comb_xc=floor((size(xc,2)-100)/9600);
 for foi=1:n_f
@@ -77,7 +77,8 @@ for foi=1:n_f
   f_off=f_search_set(foi);
   % fc*k_factor is the receiver's actual RX center frequency.
   k_factor=(fc-f_off)/fc;
-  
+
+  %% add shifted versions of same correlation in time domain 
   for t=1:3
     %xc_incoherent_single(t,:,foi)=sum(transpose(reshape(absx2(xc(t,1:n_comb_xc*9600,foi)),9600,n_comb_xc)),1)/n_comb_xc;
     %xc_incoherent_single(t,:,foi)=absx2(xc(t,1:9600,foi));
@@ -90,6 +91,8 @@ for foi=1:n_f
     end
   end
   xc_incoherent_single(:,:,foi)=xc_incoherent_single(:,:,foi)/n_comb_xc;
+
+  %%
   % Combine adjacent samples that might be different taps from the same channel.
   xc_incoherent(:,:,foi)=xc_incoherent_single(:,:,foi);
   for t=1:ds_comb_arm
