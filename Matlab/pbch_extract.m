@@ -1,4 +1,4 @@
-function [pbch_sym, pbch_ce]=pbch_extract(peak, tfg, ce, frame_phase)
+function [pbch_sym pbch_ce]=pbch_extract(peak,tfg,ce);
 
 % Extract only the MIB RE's from the TFG
 
@@ -22,14 +22,14 @@ function [pbch_sym, pbch_ce]=pbch_extract(peak, tfg, ce, frame_phase)
 % Local shortcuts
 n_id_1=peak.n_id_1;
 n_id_2=peak.n_id_2;
-cp_type_val=peak.cp_type_val;
+cp_type=peak.cp_type;
 
 % Derive some values
-% n_ofdm=size(tfg,1);
-if cp_type_val == 0
+n_ofdm=size(tfg,1);
+if (strcmpi(cp_type,'normal'))
   n_symb_dl=7;
   m_bit=1920;
-elseif cp_type_val == 1
+elseif (strcmpi(cp_type,'extended'))
   n_symb_dl=6;
   m_bit=1728;
 else
@@ -42,8 +42,7 @@ pbch_sym=NaN(1,m_bit/2);
 pbch_ce=NaN(4,m_bit/2);
 idx=1;
 v_shift_m3=mod(v_shift,3);
-for fr_raw=0:3
-  fr = mod(fr_raw+frame_phase, 4);
+for fr=0:3
   for sym=0:3
     for sc=0:71
       % Skip (possible) RS locations
@@ -61,4 +60,3 @@ for fr_raw=0:3
   end
 end
 assert(idx-1==m_bit/2);
-

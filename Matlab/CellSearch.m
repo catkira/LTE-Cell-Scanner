@@ -8,16 +8,14 @@
 % https://github.com/Evrytania/Matlab-Library
 % https://github.com/JiaoXianjun/multi-rtl-sdr-calibration
 
-function [cell_info, r_pbch_sub, r_20M_sub, cell_info_return] = CellSearch(r_pbch, r_20M, f_search_set, fc, fs)
-r_20M_sub = -1;
+function [cell_info, r_pbch_sub, r_full_sub, cell_info_return] = CellSearch(r_pbch, r_full, f_search_set, fc, fs)
+r_full_sub = -1;
 skip_TDD = 1;
 
-[~, td_pss] = pss_gen;
+[~, td_pss] = pss_gen; % generate td zadoff chu sequences
 
 % f_search_set = 20e3:5e3:30e3; % change it wider if you don't know pre-information
 pss_fo_set = pss_fo_set_gen(td_pss, f_search_set);
-
-% sampling_carrier_twist = 0; % ATTENTION! If this is 1, make sure fc is aligned with bin file!!!
 
 num_radioframe = 8; % each radio frame length 10ms. MIB period is 4 radio frame
 
@@ -39,6 +37,10 @@ ex_gain = 2;
 
 num_try = floor(length(r_pbch)/num_sample_pbch);
 tdd_fdd_str = {'TDD', 'FDD'};
+%% Display overview grid
+figure(3); show_time_frequency_grid_according_pss(400, 1, r_full, fs);
+title("overview")
+%%
 for try_idx = 1 : num_try
     disp(['Try idx ' num2str(try_idx)]);
 
@@ -55,13 +57,14 @@ for try_idx = 1 : num_try
     [dynamic_f_search_set, xc, ~] = sampling_ppm_f_search_set_by_pss(capbuf_pbch.', f_search_set, td_pss, pss_fo_set);
     
     %% Display grid 
-    sp_20M = (sp-1)*pbch_sampling_ratio + 1;
-    ep_20M = ep*pbch_sampling_ratio;
-    if ep_20M > size(r_20M,1); ep_20M = size(r_20M,1); end
-    r_20M_sub = r_20M(sp_20M:ep_20M);
+    sp_full = (sp-1)*fs/sampling_rate_pbch + 1;
+    ep_full = ep*fs/sampling_rate_pbch;
+    if ep_full > size(r_full,1); ep_full = size(r_full,1); end
+    r_full_sub = r_full(sp_full:ep_full);
     %time_displayed = 21e-3; % 21ms
-    time_displayed = size(r_20M_sub,1)/fs; % show everything
-    figure(2); show_time_frequency_grid_according_pss(1, 1, r_20M_sub(1 : time_displayed*fs),fs); % plot 21ms
+    time_displayed = size(r_full_sub,1)/fs; % show everything
+    figure(2); show_time_frequency_grid_according_pss(0, 1, r_full_sub(1 : time_displayed*fs), fs); % plot 21ms
+    title("current segment")
 
     %%
     [xc_incoherent_collapsed_pow, xc_incoherent_collapsed_frq, n_comb_xc, ~, ~, ~, sp_incoherent, ~]= ...
@@ -71,15 +74,25 @@ for try_idx = 1 : num_try
     Z_th1=ex_gain.*R_th1*sp_incoherent/rx_cutoff/137/2/n_comb_xc/(2*DS_COMB_ARM+1);
 
     figure(1);
-    subplot(3,1,1); hold off; plot(xc_incoherent_collapsed_pow(1,:)); title('n_id_2=0') ;drawnow;
-    subplot(3,1,2); hold off; plot(xc_incoherent_collapsed_pow(2,:)); title('n_id_2=1'); drawnow;
-    subplot(3,1,3); hold off; plot(xc_incoherent_collapsed_pow(3,:)); title('n_id_2=2'); drawnow;
+    subplot(3,1,1); hold off; plot(xc_incoherent_collapsed_pow(1,:)); title('n_id_2=0', 'Interpreter', 'none'); drawnow;
+    subplot(3,1,2); hold off; plot(xc_incoherent_collapsed_pow(2,:)); title('n_id_2=1', 'Interpreter', 'none'); drawnow;
+    subplot(3,1,3); hold off; plot(xc_incoherent_collapsed_pow(3,:)); title('n_id_2=2', 'Interpreter', 'none'); drawnow;
     peaks=peak_search(xc_incoherent_collapsed_pow,xc_incoherent_collapsed_frq,Z_th1,dynamic_f_search_set,fc);
 
     for j = 1 : length(peaks)
         peaks(j).extra_info.num_peaks_raw = length(peaks)/2;
         subplot(3,1,peaks(j).n_id_2+1); hold on; plot(peaks(j).ind, xc_incoherent_collapsed_pow(peaks(j).n_id_2+1,peaks(j).ind),'r*'); drawnow;
     end
+
+    % aligned pbch plot if a peak was found
+    if ~isempty(peaks)
+        figure(4); show_time_frequency_grid_according_pss(peaks(1).ind, peaks(1).k_factor, capbuf_pbch, 1.92e6); drawnow;
+        title("pbch")
+        figure(5)
+        plot(abs(r_pbch(peaks(1).ind-500:peaks(1).ind+100)));
+        
+    end
+    
     disp(['Found ' num2str(length(peaks)/2) ' peaks']);
     tdd_flags = kron(ones(1, length(peaks)/2), [0 1]); % even: tdd_flag 0; odd : tdd_flag 1
     
@@ -88,7 +101,7 @@ for try_idx = 1 : num_try
     for i=1:length(peaks)
         disp(['try peak ' num2str(floor((i+1)/2)) ' at offset ' num2str(peaks(i).ind/((30.72e6/16)/fs)) ' in ' tdd_fdd_str{mod(i,2)+1} ' mode']);
         tdd_flag = tdd_flags(i);
-        peak = sss_detect(peaks(i),capbuf_pbch,THRESH2_N_SIGMA,fc,tdd_flag);
+        peak = sss_detect(peaks(i),capbuf_pbch,THRESH2_N_SIGMA,fc);
         if ~isnan( peak.n_id_1 )
             if skip_TDD == 1 && tdd_flag == 1
                 continue;
@@ -100,6 +113,7 @@ for try_idx = 1 : num_try
             if isnan( peak.n_rb_dl)
                 continue;
             end
+            figure(1)
             subplot(3,1,peaks(j).n_id_2+1); hold on; plot(peak.ind, xc_incoherent_collapsed_pow(peaks(j).n_id_2+1,peak.ind),'g*'); drawnow;            
             if tdd_flag == 1
                 disp('  Detected a TDD cell!');
