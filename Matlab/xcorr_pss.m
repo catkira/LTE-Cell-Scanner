@@ -124,5 +124,8 @@ for t=1:3
   [pow frq]=max(transpose(shiftdim(xc_incoherent(t,:,:),1)),[],1);
   xc_incoherent_collapsed_pow(t,:)=pow;
   xc_incoherent_collapsed_frq(t,:)=frq;
+  %% debug output
+  [max_corr, max_ind] = max(max(xc_incoherent(t,:,:)));
+  disp(['max correlation ' num2str(max(max_corr)) ' at ' num2str(f_search_set(max_ind)) ' Hz offset']);
 end
 
